@@ -1,51 +1,113 @@
-// Conversation history (full context)
+
+// Full conversation history
 const messages = [];
 
+// DOM elements
 const chatDisplay = document.getElementById('chatDisplay');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 
-/**
- * Render a message bubble in the chat display
- */
+// Backend URL
+const API_URL = 'http://localhost:3000/chat';
+
+// Render message
 function renderMessage(role, content) {
     const messageDiv = document.createElement('div');
+
     messageDiv.classList.add('message', role);
     messageDiv.textContent = content;
+
     chatDisplay.appendChild(messageDiv);
-    
-    // Auto-scroll to bottom
+
+    // Scroll to latest message
     chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
 
-/**
- * Handle sending the message
- */
-async function sendMessage() {
-    const text = messageInput.value.trim();
-    if (!text) return;
+// Show error message
+function showError(message) {
+    const errorDiv = document.createElement('div');
 
-    // 1. Add user message to state
-    messages.push({ role: "user", content: text });
+    errorDiv.classList.add('message', 'error');
+    errorDiv.textContent = message;
 
-    // 2. Render user bubble
-    renderMessage("user", text);
-
-    // 3. Clear input
-    messageInput.value = "";
-
-    // TODO: Call your backend /chat route here
-    // Send the full `messages` array — not just the latest message
-    // Hint: fetch('http://localhost:3000/chat', { method: 'POST', ... })
-    // On response: add { role: 'assistant', content: reply } to messages
-    // Render the assistant bubble in chatDisplay
+    chatDisplay.appendChild(errorDiv);
+    chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
 
-// Event Listeners
+// Send message to backend
+async function sendMessage() {
+    const text = messageInput.value.trim();
+
+    if (!text) return;
+
+    // Prevent multiple simultaneous requests
+    if (sendBtn.disabled) return;
+
+    // Add user message to conversation history
+    messages.push({
+        role: 'user',
+        content: text
+    });
+
+    // Display user message
+    renderMessage('user', text);
+
+    // Clear input
+    messageInput.value = '';
+
+    // Disable button while waiting
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Thinking...';
+
+    try {
+        // Send complete conversation history
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                messages: messages
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Unable to get AI response.');
+        }
+
+        // Save AI response to conversation history
+        messages.push({
+            role: 'assistant',
+            content: data.reply
+        });
+
+        // Display AI response
+        renderMessage('assistant', data.reply);
+
+    } catch (error) {
+        console.error('Chat error:', error);
+
+        showError(error.message || 'Something went wrong. Please try again.');
+
+        // Remove failed user message from history
+        messages.pop();
+
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
+        messageInput.focus();
+    }
+}
+
+// Send button event
 sendBtn.addEventListener('click', sendMessage);
 
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+// Enter key event
+messageInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
         sendMessage();
     }
 });
