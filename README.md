@@ -10,10 +10,10 @@ The application follows a secure client-server architecture: the frontend commun
 |---|---|
 | Live Frontend | https://beautiful-daffodil-637bc9.netlify.app |
 | Live Backend | https://challenge-7-ai-chatbot.onrender.com |
-| Backend Health Check | https://challenge-7-ai-chatbot.onrender.com/health |
+
 | GitHub Repository | https://github.com/anurag815311/challenge-7-ai-chatbot |
 | Pull Request | https://github.com/anurag815311/challenge-7-ai-chatbot/pull/1 |
-| Walkthrough Video | https://drive.google.com/file/d/1SAeMpFxGa8kMCtG7hVIjwXhfzzbz2ZEz/view?usp=sharing |
+
 
 ## 📌 What I Built
 
@@ -348,9 +348,6 @@ const API_URL = 'https://challenge-7-ai-chatbot.onrender.com/chat';
 
 The frontend sends requests to this backend endpoint rather than calling OpenRouter directly.
 
-### Backend Health Check
-
-https://challenge-7-ai-chatbot.onrender.com/health
 
 Note: Render's free services may spin down after inactivity, so the first request after an idle period can take longer.
 
@@ -425,7 +422,7 @@ git push origin feature/ai-chatbot
 
 The walkthrough demonstrates the chatbot's functionality, contextual conversation, backend API-key handling, and project README.
 
-[Watch the AI Chatbot Walkthrough](https://drive.google.com/file/d/1SAeMpFxGa8kMCtG7hVIjwXhfzzbz2ZEz/view?usp=sharing)
+
 
 ## 🔮 Future Improvements
 
