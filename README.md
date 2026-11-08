@@ -10,9 +10,8 @@ The project follows a secure backend architecture where API credentials are stor
 
 | Resource | Link |
 |---|---|
-| Live Frontend | `https://YOUR-NETLIFY-SITE.netlify.app` |
-| Live Backend | `https://YOUR-RENDER-SERVICE.onrender.com` |
-| Backend Health Check | `https://YOUR-RENDER-SERVICE.onrender.com/health` |
+| Live Frontend | `https://beautiful-daffodil-637bc9.netlify.app` |
+| Live Backend | `https://challenge-7-ai-chatbot.onrender.com/` |
 | GitHub Repository | https://github.com/anurag815311/challenge-7-ai-chatbot |
 | Pull Request | Add your PR URL here |
 
