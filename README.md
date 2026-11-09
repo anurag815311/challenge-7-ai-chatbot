@@ -1,159 +1,130 @@
-# 🤖 AI Chatbot — Build and Deploy Your First AI Chatbot
+# AI Chatbot — Build and Deploy Your First AI Chatbot
 
-A full-stack AI chatbot built using **HTML, CSS, JavaScript, Node.js, Express, and OpenRouter**. Users can send messages through a web interface, receive AI-generated responses, and continue a conversation with context from earlier messages in the same session.
+A full-stack, session-based AI chatbot built with **HTML, CSS, JavaScript, Node.js, Express, and OpenRouter**.
 
-The application uses a client-server architecture: the frontend communicates with the Express backend, and the backend makes requests to OpenRouter while keeping API credentials server-side.
+The chatbot is designed around a practical frustration I encountered while learning and explaining programming: when someone gets stuck on a concept, they often need to search across multiple pages or repeat the context every time they ask a follow-up question. This project provides one conversational place to ask a programming question, receive an explanation, and continue with related questions while the current session's conversation context is retained.
+
+> **Important implementation note:** This README documents a fixed OpenRouter model configuration. To make the code match this documentation, update the `model` value in `backend/server.js` from `openrouter/free` to `liquid/lfm-3-1.7b:free`, then redeploy the backend. Do not claim the fixed model is deployed until this change has been committed and verified.
 
 ---
 
-## 🌐 Live Deployment and Project Links
+## Live application and links
 
 | Resource | Link |
 |---|---|
-| Live Frontend | https://beautiful-daffodil-637bc9.netlify.app |
-| Live Backend | https://challenge-7-ai-chatbot.onrender.com |
-| Backend Health Check | https://challenge-7-ai-chatbot.onrender.com/health |
-| GitHub Repository | https://github.com/anurag815311/challenge-7-ai-chatbot |
-| Pull Request | https://github.com/anurag815311/challenge-7-ai-chatbot/pull/1 |
-| Walkthrough Video | Add the updated chatbot walkthrough link after recording and uploading it |
+| Frontend | https://beautiful-daffodil-637bc9.netlify.app/ |
+| Backend | https://challenge-7-ai-chatbot.onrender.com/ |
+| Backend health check | https://challenge-7-ai-chatbot.onrender.com/health |
+| GitHub repository | https://github.com/anurag815311/challenge-7-ai-chatbot |
+| Pull request | https://github.com/anurag815311/challenge-7-ai-chatbot/pull/1 |
+| Walkthrough video | **Add the new recording link here after uploading it.** |
 
-> **Deployment configuration:** The production frontend must send chat requests to `https://challenge-7-ai-chatbot.onrender.com/chat`. The local development URL `http://localhost:3000/chat` is only for running the backend on the same computer. A deployed frontend must not use localhost. The live request and contextual follow-up must be tested after the latest Netlify deployment; the URLs above alone do not prove that a live conversation has succeeded.
-
-## 📌 What I Built
-
-I built a minimal AI chatbot with:
-
-- A frontend chat interface with a message input, send button, and conversation display.
-- A Node.js and Express backend with a `POST /chat` endpoint.
-- OpenRouter integration for AI-generated responses.
-- Conversation history maintained in a frontend JavaScript array.
-- Backend validation and error handling for incoming messages and AI API failures.
-- Environment-variable-based API key management.
-- Separate frontend and backend deployments using Netlify and Render.
-
-## 🤖 API and Model
-
-**Question 1: Which API and model did I use?**
-
-- **Provider:** OpenRouter
-- **API:** OpenRouter Chat Completions API
-- **Endpoint:** `https://openrouter.ai/api/v1/chat/completions`
-- **Model configuration:** `openrouter/free`
-
-The application uses the `openrouter/free` router. It selects an available supported free model, so the exact underlying model can vary between requests. It would therefore be inaccurate to describe the implementation as using one fixed model such as `openai/gpt-4o-mini`.
-
-The backend forwards the complete conversation history to OpenRouter and returns the generated response to the frontend.
-
-Useful resources:
-
-- [OpenRouter](https://openrouter.ai/)
-- [OpenRouter API documentation](https://openrouter.ai/docs)
-- [OpenRouter free models](https://openrouter.ai/collections/free-models)
-
-## 🔐 Why Is the API Call Made From the Backend?
-
-**Question 2: Why did I use the backend instead of calling the AI API directly from the frontend?**
-
-An API key placed in frontend JavaScript can be inspected through browser DevTools, downloaded source files, or network requests. A visitor could copy the key and make unauthorized requests using my account, potentially consuming credits or causing unexpected charges.
-
-For this reason, the frontend sends messages only to the Express backend. The backend reads `OPENROUTER_API_KEY` from its environment and attaches the key to the request sent to OpenRouter. The secret is not included in frontend code or returned to the browser.
-
-### Environment variables
-
-For local development, create `backend/.env`:
-
-```env
-OPENROUTER_API_KEY=your-actual-api-key
-PORT=3000
-```
-
-The `.env` file must be excluded through `.gitignore` and must never be committed.
-
-The committed `backend/.env.example` contains placeholders:
-
-```env
-OPENROUTER_API_KEY=your-openrouter-api-key-here
-GEMINI_API_KEY=your-gemini-api-key-here
-PORT=3000
-```
-
-For production, configure `OPENROUTER_API_KEY` in the Render service's environment-variable settings.
-
-The backend reads the key using:
-
-```javascript
-const apiKey = process.env.OPENROUTER_API_KEY;
-```
-
-## 🧩 Development Problem Encountered and How I Resolved It
-
-One problem I encountered while moving the application from local development to deployment was the frontend API URL.
-
-During local development, the frontend used:
-
-```javascript
-const API_URL = 'http://localhost:3000/chat';
-```
-
-That address works only when the browser and backend are running on the same computer. After deploying the frontend to Netlify, a visitor's browser would interpret `localhost` as that visitor's own computer, not my Render server. As a result, the deployed frontend would not reach the deployed backend.
-
-The production frontend configuration needs to use the Render endpoint instead:
+The production frontend must send chat requests to:
 
 ```javascript
 const API_URL = 'https://challenge-7-ai-chatbot.onrender.com/chat';
 ```
 
-This distinction between local and production configuration is important: the local URL is for local testing, while the Render URL is for the publicly deployed frontend. After changing the frontend source, the updated frontend must also be redeployed to Netlify.
+For local development, use `http://localhost:3000/chat`. Do not deploy the localhost URL to Netlify.
 
-**Verification still required after the latest deployment:** open the live Netlify site, send a message, and inspect the browser Network tab. The `/chat` request URL should be `https://challenge-7-ai-chatbot.onrender.com/chat`, and both an initial response and a contextual follow-up should succeed. Do not mark this verification complete until it has been tested.
+---
 
-## 🔄 Conversation Context Management
+## The problem I wanted to solve
 
-The chatbot maintains conversation history in a JavaScript array.
+When learning or explaining programming, a small doubt can interrupt the learning flow. Finding a clear explanation may require switching between search results, documentation, and tutorials. A follow-up question can also lose its meaning if the earlier context is not carried forward.
 
-Example message structure:
+I wanted a lightweight assistant where a learner can:
 
-```javascript
-const messages = [
-    {
-        role: "user",
-        content: "What is JavaScript?"
-    },
-    {
-        role: "assistant",
-        content: "JavaScript is a programming language used for web development."
-    },
-    {
-        role: "user",
-        content: "Can you give me an example of that?"
-    }
-];
+- Ask a programming or technical question in plain language.
+- Get an AI-generated explanation in the same interface.
+- Ask a follow-up question without retyping the previous context.
+- Explore a concept step by step during one active chat session.
+
+The project addresses this specific use case with a simple conversational interface and session-level context. It is an educational helper, not a replacement for documentation, a mentor, or independently verified technical guidance.
+
+---
+
+## Features
+
+- Responsive chat interface built with HTML, CSS, and JavaScript.
+- Express backend exposing `POST /chat`.
+- OpenRouter Chat Completions API integration.
+- Conversation history sent as a complete `messages` array.
+- Backend validation and error handling.
+- API credentials loaded from environment variables.
+- `.env.example` provided; actual `.env` files excluded from Git.
+- Frontend and backend deployed separately on Netlify and Render.
+
+## Technology stack
+
+| Technology | Purpose |
+|---|---|
+| HTML5 and CSS3 | Chat interface and styling |
+| JavaScript | UI behavior and in-session conversation history |
+| Node.js | Backend runtime |
+| Express | HTTP API and `/chat` route |
+| OpenRouter | Hosted model API |
+| `fetch()` | Backend HTTP request to OpenRouter |
+| `dotenv` | Local environment-variable loading |
+| CORS | Cross-origin frontend/backend requests |
+| Netlify | Frontend hosting |
+| Render | Backend hosting |
+| Git and GitHub | Version control and collaboration |
+
+---
+
+## Architecture
+
+```text
+Learner
+  |
+  v
+Netlify frontend (HTML / CSS / JavaScript)
+  |
+  | POST /chat
+  | { messages: [...] }
+  v
+Render backend (Node.js / Express)
+  |
+  | Reads OPENROUTER_API_KEY from environment
+  | Sends model + messages using fetch()
+  v
+OpenRouter Chat Completions API
+  |
+  v
+Fixed model: liquid/lfm-3-1.7b:free
+  |
+  v
+Backend returns { reply: "..." }
+  |
+  v
+Frontend displays assistant response
 ```
 
-For each new message:
+## API provider, exact model, and backend function
 
-1. The frontend adds the user's message to the `messages` array.
-2. It sends the complete array to the backend.
-3. The backend forwards the conversation history to OpenRouter.
-4. The AI generates a response using the previous messages as context.
-5. The frontend adds the assistant's response to the array and displays it.
+- **Provider:** OpenRouter
+- **API:** Chat Completions API
+- **Endpoint:** `https://openrouter.ai/api/v1/chat/completions`
+- **Fixed model ID for the documented configuration:** `liquid/lfm-3-1.7b:free`
 
-This allows follow-up questions to refer to earlier messages in the same session. The history is held in frontend memory; it is not persisted in a database and will not survive a page refresh.
+The earlier `openrouter/free` value is a model router. It can choose different underlying models and therefore does not identify one fixed model. For a reproducible configuration, this README specifies the exact model ID above.
 
-## ⚙️ Important Backend Implementation Decision
+### Exact function responsible for the AI request
 
-The AI request is handled by the asynchronous Express route handler registered in `backend/server.js`:
+The request is handled by the `POST /chat` Express route in **`backend/server.js`**:
 
 ```javascript
 app.post('/chat', async (req, res) => {
-    // Validate the incoming messages.
-    // Read the API key from the environment.
-    // Send the conversation history to OpenRouter.
-    // Return the generated response.
+    // 1. Validate req.body.messages.
+    // 2. Read OPENROUTER_API_KEY from process.env.
+    // 3. Call OpenRouter with fetch().
+    // 4. Extract the assistant message.
+    // 5. Return { reply } to the frontend.
 });
 ```
 
-The external AI request is made inside this handler using `fetch()`:
+The external API call is made with `fetch()` inside this route:
 
 ```javascript
 const response = await fetch(
@@ -161,185 +132,226 @@ const response = await fetch(
     {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'openrouter/free',
-            messages: messages
+            model: 'liquid/lfm-3-1.7b:free',
+            messages
         })
     }
 );
 ```
 
-I chose to send the complete `messages` array rather than only the latest user message because the model needs the earlier user and assistant turns to answer follow-up questions with context. I also validate the request before making the external API call so malformed input can be rejected without unnecessarily contacting the AI provider.
+**Keep the code and README in sync:** if the deployed `backend/server.js` still contains `model: 'openrouter/free'`, it is still using the router rather than the fixed model documented here. Change it, test it, commit it, and redeploy before presenting this as the deployed configuration.
 
-## 🚫 Features Intentionally Not Included
+Model listing and pricing can change. Check the [OpenRouter model catalogue](https://openrouter.ai/models) and the [LFM3-1.7B model page](https://openrouter.ai/liquid/lfm-3-1.7b:free) before relying on its current availability.
 
-This implementation focuses on demonstrating a basic full-stack AI integration. The following features are outside the current scope:
+---
 
-| Feature not included | Reason for excluding it from this version |
-|---|---|
-| User authentication | The challenge focuses on the AI integration and does not require user accounts. |
-| Database persistence | Conversation history is kept in frontend memory for the current session. A database was not necessary to demonstrate contextual requests. |
-| Multiple chat sessions | The current implementation demonstrates one conversation history at a time. |
-| Streaming responses | A standard request-response flow was sufficient to demonstrate the backend integration and return an AI response. |
-| File and image uploads | The current interface is designed for text-based conversations. |
-| User-specific chat history | There is no authentication or database layer to associate saved conversations with individual users. |
-| Rate limiting | Advanced request throttling was outside the initial scope; it would be important to add before handling wider public usage. |
+## Why the AI API call happens on the backend
 
-These are scope decisions for this version, not claims that the features are technically impossible. They are possible future improvements.
+The browser must not contain the OpenRouter secret. Frontend JavaScript and browser network requests can be inspected by visitors. If the key were placed in frontend code, someone could copy it and make requests using the account's credentials.
 
-## 🏗️ System Architecture
+Instead:
 
-```text
-             USER
-               |
-               v
-      FRONTEND (HTML/CSS/JS)
-               |
-               | POST /chat
-               | Full conversation history
-               v
-        NODE.JS + EXPRESS
-               |
-               | Read API key from environment
-               v
-            OPENROUTER
-               |
-               v
-       AVAILABLE FREE MODEL
-               |
-               v
-        AI-GENERATED RESPONSE
-               |
-               v
-        EXPRESS BACKEND
-               |
-               v
-         FRONTEND CHAT UI
-               |
-               v
-              USER
+1. The frontend sends the conversation to the Express backend.
+2. The backend reads `OPENROUTER_API_KEY` from its environment.
+3. The backend adds the key to the OpenRouter request.
+4. The backend returns the generated reply without returning the secret.
+
+The backend reads the key with:
+
+```javascript
+const apiKey = process.env.OPENROUTER_API_KEY;
 ```
 
-## 🛠️ Technologies Used
+### Local environment configuration
 
-| Technology | Purpose |
-|---|---|
-| HTML5 | Chat interface structure |
-| CSS3 | Styling and layout |
-| JavaScript | Frontend functionality and conversation history |
-| Node.js | Backend runtime |
-| Express.js | REST API development |
-| OpenRouter | AI model integration |
-| node-fetch | HTTP requests to OpenRouter |
-| dotenv | Environment variable management |
-| CORS | Cross-origin communication |
-| Git and GitHub | Version control |
-| Render | Backend deployment |
-| Netlify | Frontend deployment |
+Create `backend/.env` locally:
 
-## 📂 Project Structure
-
-```text
-challenge-7-ai-chatbot/
-│
-├── backend/
-│   ├── .env
-│   ├── .env.example
-│   ├── package.json
-│   └── server.js
-│
-├── frontend/
-│   ├── index.html
-│   ├── script.js
-│   └── style.css
-│
-├── .gitignore
-└── README.md
+```env
+OPENROUTER_API_KEY=your-actual-openrouter-api-key
+PORT=3000
 ```
 
-## ⚙️ Installation and Local Setup
+The repository should contain a placeholder-only `backend/.env.example`:
+
+```env
+OPENROUTER_API_KEY=your-openrouter-api-key-here
+PORT=3000
+```
+
+For production, add `OPENROUTER_API_KEY` in the Render service's environment settings. Never commit the real key or place it in frontend code.
+
+---
+
+## Conversation context: how follow-up questions work
+
+The frontend maintains an array of messages for the active conversation. Each item has a role and content:
+
+```javascript
+const messages = [
+    { role: 'user', content: 'Explain JavaScript closures.' },
+    { role: 'assistant', content: 'A closure is ...' },
+    { role: 'user', content: 'Can you show a simple example?' }
+];
+```
+
+For each new user message:
+
+1. The frontend appends the new user message to `messages`.
+2. It sends the complete array to `POST /chat`.
+3. The backend validates the array and forwards it to OpenRouter.
+4. The model receives the earlier turns along with the latest question.
+5. The backend returns the assistant reply.
+6. The frontend appends and displays the assistant reply.
+
+### Code decision
+
+I chose to send the complete `messages` array instead of sending only the latest user message. The model needs the previous user and assistant turns to understand references such as “explain that again” or “show another example.” This makes follow-up questions meaningful within the active session.
+
+The current history is held in browser memory. It is not stored in a database and is lost when the page is refreshed.
+
+---
+
+## Development and deployment issue
+
+During deployment, the frontend API URL needs to match the environment.
+
+Local development:
+
+```javascript
+const API_URL = 'http://localhost:3000/chat';
+```
+
+Production:
+
+```javascript
+const API_URL = 'https://challenge-7-ai-chatbot.onrender.com/chat';
+```
+
+A visitor's browser interprets `localhost` as the visitor's own computer, not the Render server. Therefore, the deployed Netlify frontend must use the Render URL. After changing the frontend configuration, the frontend must be redeployed.
+
+This was a deployment obstacle, not the user problem the chatbot is intended to solve. The product problem is described in the section above.
+
+---
+
+## Features intentionally left out
+
+This version is intentionally small and focused on a single text conversation.
+
+| Excluded feature | Why it is outside this version |
+|---|---|
+| Authentication and user accounts | The challenge focuses on the AI chat flow, not account management. |
+| Database-backed chat history | In-memory history is sufficient to demonstrate context within one active session. |
+| Multiple saved conversations | The current UI handles one active conversation at a time. |
+| Streaming tokens | A standard request/response flow keeps the initial implementation simpler. |
+| File and image uploads | The current use case is text-based programming questions. |
+| User-specific history | There is no authentication or persistence layer to associate conversations with users. |
+| Rate limiting and abuse controls | These are important for a public production service but were outside the initial challenge scope. |
+
+These are scope decisions, not technical limitations. They are possible future improvements.
+
+---
+
+## Cost estimate
+
+The documented fixed model, `liquid/lfm-3-1.7b:free`, is listed by OpenRouter as a free model variant with **$0 per million input tokens and $0 per million output tokens** at the time this README was prepared. Free availability and usage limits can change, so verify the model's current pricing before deployment or use.
+
+Source: [OpenRouter — LFM3-1.7B (free)](https://openrouter.ai/liquid/lfm-3-1.7b:free) and [OpenRouter free model catalogue](https://openrouter.ai/collections/free-models/).
+
+### Assumptions for one example request
+
+For a transparent estimate, assume:
+
+- Input: **500 tokens** (conversation history plus latest user message).
+- Output: **300 tokens** (assistant response).
+- Input rate: **$0.00 per 1,000,000 tokens**.
+- Output rate: **$0.00 per 1,000,000 tokens**.
+
+Formula:
+
+```text
+Cost per call
+= (input_tokens / 1,000,000 × input_rate)
+  + (output_tokens / 1,000,000 × output_rate)
+
+= (500 / 1,000,000 × $0.00)
+  + (300 / 1,000,000 × $0.00)
+
+= $0.00 + $0.00
+= $0.00 per call
+```
+
+| Example usage | Estimated input tokens | Estimated output tokens | Model API cost at listed free rates |
+|---|---:|---:|---:|
+| 1 call | 500 | 300 | $0.00 |
+| 100 calls | 50,000 | 30,000 | $0.00 |
+| 1,000 calls | 500,000 | 300,000 | $0.00 |
+
+These token counts are planning assumptions, not measured averages from production logs. Actual token usage depends on message length and conversation history. Since the full conversation is sent on each request, input tokens can increase as the chat grows.
+
+### Hosting costs and limits
+
+The frontend and backend are hosted on Netlify and Render. Any $0 hosting estimate depends on the current plan, usage, and platform limits. This README does not claim that hosting is guaranteed to remain free. Check the [Netlify pricing page](https://www.netlify.com/pricing/) and [Render pricing page](https://render.com/pricing) for current terms.
+
+---
+
+## Local installation
 
 ### Prerequisites
 
 - Node.js and npm
 - Git
-- An OpenRouter account and API key
+- OpenRouter account and API key
 
 ### 1. Clone the repository
 
 ```bash
 git clone https://github.com/anurag815311/challenge-7-ai-chatbot.git
-```
-
-### 2. Navigate to the project
-
-```bash
 cd challenge-7-ai-chatbot
 ```
 
-### 3. Install backend dependencies
+### 2. Install backend dependencies
 
 ```bash
 cd backend
 npm install
 ```
 
-### 4. Configure environment variables
+### 3. Create the environment file
 
-Create a `.env` file inside the `backend` directory:
+Create `backend/.env`:
 
 ```env
-OPENROUTER_API_KEY=your-actual-api-key
+OPENROUTER_API_KEY=your-actual-openrouter-api-key
 PORT=3000
 ```
 
-### 5. Start the backend
+### 4. Start the backend
 
 ```bash
 npm start
 ```
 
-Expected output:
+The server should report that it is listening on port `3000`.
 
-```text
-Server is running on port 3000
-```
+### 5. Run the frontend locally
 
-### 6. Open the frontend
+Open `frontend/index.html` with VS Code Live Server.
 
-Open `frontend/index.html` using Visual Studio Code Live Server.
-
-For local development, the frontend API URL should be:
+For local testing, configure:
 
 ```javascript
 const API_URL = 'http://localhost:3000/chat';
 ```
 
-For the deployed frontend, it should be:
+For the deployed site, configure the Render URL shown in the deployment section. Do not publish the localhost setting.
 
-```javascript
-const API_URL = 'https://challenge-7-ai-chatbot.onrender.com/chat';
-```
+---
 
-Use the appropriate URL for the environment. Do not deploy the localhost configuration to Netlify.
-
-## 🧪 Testing
-
-The following scenarios should be tested:
-
-| Test case | Expected result |
-|---|---|
-| Backend health check | Returns HTTP 200 |
-| Send a message | AI generates a response |
-| Empty message | Message is not submitted |
-| Follow-up question | AI can use earlier conversation context |
-| Missing API key | Backend returns an error |
-| Invalid message format | Backend returns HTTP 400 |
-| OpenRouter API failure | Backend returns an appropriate error |
-| Deployed frontend request | Browser sends `/chat` to the Render backend, not localhost |
+## API reference
 
 ### Health check
 
@@ -347,218 +359,166 @@ The following scenarios should be tested:
 GET /health
 ```
 
-Expected response:
+The expected response, based on the backend health route, is:
 
 ```json
 {
-    "status": "ok",
-    "message": "AI Chatbot backend is running!"
+  "status": "ok",
+  "message": "AI Chatbot backend is running!"
 }
 ```
 
-### Chat endpoint
+### Chat
 
 ```http
 POST /chat
+Content-Type: application/json
 ```
 
 Example request:
 
 ```json
 {
-    "messages": [
-        {
-            "role": "user",
-            "content": "What is JavaScript?"
-        }
-    ]
+  "messages": [
+    {
+      "role": "user",
+      "content": "Explain JavaScript closures."
+    }
+  ]
 }
 ```
 
-Expected response structure:
+Expected response shape:
 
 ```json
 {
-    "reply": "JavaScript is a programming language..."
+  "reply": "A closure is ..."
 }
 ```
 
-## 🚀 Deployment
+The exact reply depends on the model output.
 
-The application uses separate hosting platforms for the frontend and backend.
+---
 
-### Backend deployment — Render
+## Deployment
 
-**Live backend:** https://challenge-7-ai-chatbot.onrender.com
+### Backend — Render
 
-| Setting | Value |
-|---|---|
-| Platform | Render |
-| Service type | Web Service |
-| Runtime | Node.js |
-| Repository | challenge-7-ai-chatbot |
-| Branch | feature/ai-chatbot |
-| Build command | `cd backend && npm install` |
-| Start command | `cd backend && npm start` |
+- Service: Web Service
+- Runtime: Node.js
+- Build command: `cd backend && npm install`
+- Start command: `cd backend && npm start`
+- Environment variable: `OPENROUTER_API_KEY`
 
-Configure `OPENROUTER_API_KEY` in the Render dashboard's environment variables. Do not put the actual key in the repository.
+Live backend: https://challenge-7-ai-chatbot.onrender.com/
 
-### Frontend deployment — Netlify
+### Frontend — Netlify
 
-**Live frontend:** https://beautiful-daffodil-637bc9.netlify.app
-
-The production frontend must use this backend URL:
+Deploy the `frontend` directory. The production frontend must use:
 
 ```javascript
 const API_URL = 'https://challenge-7-ai-chatbot.onrender.com/chat';
 ```
 
-After changing the frontend source, redeploy the `frontend` folder or wait for the connected Netlify Git deployment to finish.
+After pushing changes, confirm that the Netlify deployment has completed before testing the live site.
 
-### Deployment health check
+### Verification checklist
 
-https://challenge-7-ai-chatbot.onrender.com/health
+Do not mark an item complete until you have personally tested it.
 
-Render free services may spin down after inactivity, so the first request after an idle period may take longer. A successful health check confirms that the health route responds; it does not by itself prove that the AI `/chat` integration works.
+- [ ] Open the live Netlify frontend.
+- [ ] Send a programming question and receive an AI response.
+- [ ] Ask a follow-up that depends on the previous answer.
+- [ ] In browser DevTools → Network, confirm the request goes to the Render `/chat` URL, not localhost.
+- [ ] Confirm the `/health` endpoint returns HTTP 200.
+- [ ] Confirm no API key appears in frontend source or browser network requests.
+- [ ] Confirm the backend code uses the fixed model ID documented above.
+- [ ] Confirm the deployed backend returns a successful response using that model.
 
-## 💰 Estimated Cost and Calculation
+A successful health check only verifies the health route. It does not prove that the AI chat integration is working.
 
-The application is configured to use OpenRouter's `openrouter/free` router. The following is an illustrative estimate under the assumption that every request is served by a free model and the hosting services remain within their applicable free-plan limits.
+---
 
-### AI request calculation
+## Google Gemini as a possible alternative provider
 
-| Usage assumption | Calculation | Estimated AI API cost |
-|---|---:|---:|
-| 100 requests | 100 × $0.00 | $0.00 |
-| 500 requests | 500 × $0.00 | $0.00 |
-| 1,000 requests | 1,000 × $0.00 | $0.00 |
+Gemini can be evaluated as an alternative provider if the selected OpenRouter model is unavailable. This is a possible future provider change, not a claim that Gemini is currently integrated into the deployed application.
 
-For example:
-
-```text
-Assumed monthly requests = 1,000
-Assumed cost per request = $0.00
-
-Estimated AI API cost
-= 1,000 × $0.00
-= $0.00
-```
-
-### Hosting estimate
-
-| Service | Assumption | Illustrative monthly cost |
-|---|---|---:|
-| Netlify | Free plan, within its usage limits | $0.00 |
-| Render | Free plan, within its usage limits | $0.00 |
-| OpenRouter | Free model is available and used | $0.00 |
-| **Illustrative total** | **All free-plan assumptions hold** | **$0.00/month** |
-
-This is an estimate, not a guaranteed price or a statement of actual historical expenditure. Free-model availability, rate limits, hosting allowances, and provider pricing can change. Paid model use or exceeding a provider's free limits may create charges. Check the OpenRouter usage dashboard and the Netlify and Render billing dashboards for actual usage and costs.
-
-## 🔁 Fallback AI Provider — Google Gemini
-
-**Question 3: Which provider would I use if OpenRouter becomes unavailable or free models are no longer accessible?**
-
-I would consider the Google Gemini API as the fallback provider.
-
-- [Google AI Studio](https://aistudio.google.com/)
-- [Gemini API documentation](https://ai.google.dev/gemini-api/docs)
-
-To switch to Gemini using its OpenAI-compatible endpoint, the two main code changes are:
-
-**1. Change the API base URL**
+Google documents an OpenAI-compatible endpoint at:
 
 ```text
 https://generativelanguage.googleapis.com/v1beta/openai/
 ```
 
-**2. Change the model name**
+The model ID and API key must be checked against the current Gemini documentation. Keep the Gemini key on the backend in an environment variable; do not expose it in the frontend.
 
-```javascript
-model: 'gemini-2.5-flash'
+References:
+- [Google AI Studio](https://aistudio.google.com/)
+- [Gemini API documentation](https://ai.google.dev/gemini-api/docs)
+
+---
+
+## AI assistance and code attribution
+
+AI assistance was used during development to help draft and refine parts of the implementation. The areas to disclose in the walkthrough are:
+
+- The initial Express `/chat` route and its request/response structure.
+- Frontend message-handling and conversation-history logic.
+- Documentation wording and setup explanations.
+
+I reviewed and adapted the suggestions for the project. I should be able to explain the final code, including request validation, environment-variable handling, the OpenRouter `fetch()` call, and why the full message history is forwarded.
+
+Update this section if the actual AI-assisted files or changes differ from the list above. Do not attribute code to AI if it was written independently.
+
+---
+
+## Walkthrough video
+
+**Replace this placeholder with the URL of the newly recorded walkthrough.**
+
+The recording should:
+
+1. Keep the presenter visible on camera throughout, if required by the assignment.
+2. Open the live deployed chatbot and demonstrate a real question.
+3. Ask a contextual follow-up and show how the earlier message is used.
+4. Show `backend/server.js`, identify the `app.post('/chat', ...)` handler, and explain the `fetch()` call.
+5. Explain the decision to forward the full `messages` array.
+6. Identify the AI-assisted code accurately.
+7. Show the fixed model ID and explain the per-call token cost calculation.
+8. Show the README and the deployed frontend/backend configuration.
+
+The README cannot establish that the camera was on; that must be visible in the actual recording.
+
+---
+
+## Project structure
+
+```text
+challenge-7-ai-chatbot/
+├── backend/
+│   ├── .env                 # Local only; do not commit
+│   ├── .env.example         # Placeholder variables only
+│   ├── package.json
+│   └── server.js
+├── frontend/
+│   ├── index.html
+│   ├── script.js
+│   └── style.css
+├── .gitignore
+└── README.md
 ```
 
-The model name is subject to current Gemini API availability. The backend request structure can remain largely the same. A Gemini API key must be configured securely in the backend environment and must never be exposed in frontend JavaScript.
+The `.env` file is created locally and should be ignored by Git. It should not appear in the committed repository.
 
-## 🤖 AI Assistance and Code Attribution
+## Future improvements
 
-AI assistance was used during development to help draft and refine parts of the implementation, including the initial Express `/chat` route and frontend message-handling logic.
+- Persistent chat history with a database.
+- Multiple conversations and session management.
+- Authentication and user profiles.
+- Streaming responses.
+- Rate limiting and request monitoring.
+- Better error and loading states.
+- Programming-focused prompt presets and suggested questions.
 
-I reviewed and adapted the generated suggestions to fit the project structure and requirements, including message validation, environment-variable-based API key handling, conversation-history forwarding, and frontend/backend configuration.
+---
 
-AI assistance was used as a development aid. The final repository should be reviewed and tested by me, and any code I cannot explain should be investigated before submission.
-
-## 🌱 Git Workflow
-
-The project follows a feature-branch workflow.
-
-- **Main branch:** `main` — contains the initial starter project.
-- **Feature branch:** `feature/ai-chatbot` — contains the chatbot implementation.
-
-Create the feature branch:
-
-```bash
-git checkout -b feature/ai-chatbot
-```
-
-Stage and commit changes:
-
-```bash
-git add .
-git commit -m "feat: implement AI chatbot with OpenRouter integration and conversation context"
-```
-
-Push changes:
-
-```bash
-git push origin feature/ai-chatbot
-```
-
-### Pull request
-
-- **Base branch:** `main`
-- **Compare branch:** `feature/ai-chatbot`
-
-[View Pull Request #1](https://github.com/anurag815311/challenge-7-ai-chatbot/pull/1)
-
-## 🎥 Project Walkthrough
-
-Add the updated Google Drive video link after recording the revised walkthrough.
-
-The video should demonstrate:
-
-1. The live deployed chatbot responding to a message.
-2. A contextual follow-up that uses an earlier message.
-3. The exact backend `/chat` handler and the `fetch()` request to OpenRouter.
-4. The API key being read from `process.env.OPENROUTER_API_KEY`, without revealing its value.
-5. The local-versus-production API URL decision.
-6. The README's API/model, backend security, excluded features, cost assumptions, and AI-assistance sections.
-
-Keep the camera visible throughout the recording, as required by the assignment.
-
-## 🔮 Future Improvements
-
-- Streaming AI responses.
-- Markdown rendering for AI responses.
-- Chat session management.
-- Conversation export.
-- Clear conversation functionality.
-- Multiple AI model selection.
-- Improved mobile responsiveness.
-- Rate limiting and request throttling.
-- Authentication and user-specific chat history.
-- Database-backed conversation persistence.
-
-## 👨‍💻 Author
-
-**Anurag Kumar Singh**
-
-GitHub: [anurag815311](https://github.com/anurag815311)
-
-## 📄 Assignment Information
-
-**Challenge #7 — Build and Deploy Your First AI Chatbot**
-
-Project Engineering — Kalvium
-
-This project demonstrates full-stack development, REST API integration, environment-variable management, AI model integration, conversation-context handling, Git version control, and cloud deployment.
+**Repository:** https://github.com/anurag815311/challenge-7-ai-chatbot
